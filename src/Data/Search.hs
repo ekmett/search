@@ -10,9 +10,8 @@ module Data.Search
   , union
   , pair
   , fromList
-  , best
-  , worst
-  , score
+  , best, bestScore
+  , worst, worstScore
   -- * Boolean-valued search
   , every
   , exists
@@ -39,6 +38,7 @@ import GHC.Generics
 -- @'Search Bool'@ can be used to answer predicate searches.
 newtype Search a b = Search { optimum :: (b -> a) -> b }
 
+-- | Find the worst-scoring result of a search.
 pessimum :: Search (Down a) b -> (b -> a) -> b
 pessimum = optimum . lmap Down
 
@@ -127,13 +127,14 @@ instance (Ord x, Hilbert x a, Hilbert x b) => Hilbert x (Either a b)
 instance (Ord x, Ord a, Hilbert x b) => Hilbert x (Search a b) where
   epsilon = fromList <$> epsilon
 
--- | search for an optimal answer
+-- | search for an optimal answer using Hilbert's epsilon
 --
 -- >>> search (>4) :: Int8
 -- 5
 best :: Hilbert a b => (b -> a) -> b
 best = optimum epsilon
 
+-- | What is the worst scoring answer by Hilbert's epsilon?
 worst :: Hilbert (Down a) b => (b -> a) -> b
 worst = pessimum epsilon
 
@@ -148,8 +149,13 @@ exists p = p (best p)
 every :: Hilbert Bool b => (b -> Bool) -> Bool
 every p = not.p $ best $ not.p
 
-score :: Search a b -> (b -> a) -> a
-score m p = p (optimum m p)
+-- | What is the best score obtained by the search?
+bestScore :: Search a b -> (b -> a) -> a
+bestScore m p = p (optimum m p)
+
+-- | What is the worst score obtained by the search?
+worstScore :: Search (Down a) b -> (b -> a) -> a
+worstScore m p = p (pessimum m p)
 
 union :: Ord a => Search a b -> Search a b -> Search a b
 union = (<!>)
