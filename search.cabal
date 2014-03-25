@@ -30,7 +30,8 @@ library
     ghc-prim,
     profunctors          >= 4     && < 5,
     semigroupoids        >= 4     && < 5,
-    tagged               >= 0.7   && < 1
+    tagged               >= 0.7   && < 1,
+    transformers         >= 0.3   && < 0.4
 
   exposed-modules:
     Data.Search

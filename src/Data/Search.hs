@@ -17,9 +17,11 @@ module Data.Search
   , exists
   -- *  Hilbert's epsilon
   , Hilbert(..)
+  , cps
   ) where
 
 import Control.Applicative
+import Control.Monad.Trans.Cont
 import Data.Function (on)
 import Data.Functor.Alt
 import Data.Functor.Bind
@@ -35,7 +37,7 @@ import GHC.Generics
 -- | Given a test that is required to execute in finite time for _all_ inputs, even infinite ones,
 -- 'Search' should productively yield an answer.
 --
--- @'Search Bool'@ can be used to answer predicate searches.
+-- @'Search' 'Bool'@ can be used for predicate searches.
 newtype Search a b = Search { optimum :: (b -> a) -> b }
 
 -- | Find the worst-scoring result of a search.
@@ -165,3 +167,6 @@ pair = on (<!>) pure
 
 fromList :: Ord a => [b] -> Search a b
 fromList = foldr1 (<!>) . map return
+
+cps :: Search a b -> Cont a b
+cps m = cont $ \p -> p (optimum m p)
