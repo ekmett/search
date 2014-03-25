@@ -7,17 +7,18 @@
 module Data.Search
   ( Search(..)
   , pessimum
+  , optimalScore, pessimalScore
+  , cps
   , union
   , pair
   , fromList
-  , best, bestScore
-  , worst, worstScore
+  -- *  Hilbert's epsilon
+  , Hilbert(..)
+  , best, worst
+  , bestScore, worstScore
   -- * Boolean-valued search
   , every
   , exists
-  -- *  Hilbert's epsilon
-  , Hilbert(..)
-  , cps
   ) where
 
 import Control.Applicative
@@ -36,6 +37,10 @@ import GHC.Generics
 
 -- | Given a test that is required to execute in finite time for _all_ inputs, even infinite ones,
 -- 'Search' should productively yield an answer.
+--
+-- I currently also assume that comparison of scores can be done in finite time for all scores.
+--
+-- This rules out large score sets.
 --
 -- @'Search' 'Bool'@ can be used for predicate searches.
 newtype Search a b = Search { optimum :: (b -> a) -> b }
@@ -129,6 +134,14 @@ instance (Ord x, Hilbert x a, Hilbert x b) => Hilbert x (Either a b)
 instance (Ord x, Ord a, Hilbert x b) => Hilbert x (Search a b) where
   epsilon = fromList <$> epsilon
 
+-- | What is the best score obtained by the search?
+optimalScore :: Search a b -> (b -> a) -> a
+optimalScore m p = p (optimum m p)
+
+-- | What is the worst score obtained by the search?
+pessimalScore :: Search (Down a) b -> (b -> a) -> a
+pessimalScore m p = p (pessimum m p)
+
 -- | search for an optimal answer using Hilbert's epsilon
 --
 -- >>> search (>4) :: Int8
@@ -140,24 +153,22 @@ best = optimum epsilon
 worst :: Hilbert (Down a) b => (b -> a) -> b
 worst = pessimum epsilon
 
+bestScore :: Hilbert a b => (b -> a) -> a
+bestScore = optimalScore epsilon
+
+worstScore :: Hilbert (Down a) b => (b -> a) -> a
+worstScore = pessimalScore epsilon
+
 -- | does there exist an element satisfying the predicate?
 --
 -- >>> exists (>(maxBound::Int8))
 -- False
 --
 exists :: Hilbert Bool b => (b -> Bool) -> Bool
-exists p = p (best p)
+exists = bestScore
 
 every :: Hilbert Bool b => (b -> Bool) -> Bool
 every p = not.p $ best $ not.p
-
--- | What is the best score obtained by the search?
-bestScore :: Search a b -> (b -> a) -> a
-bestScore m p = p (optimum m p)
-
--- | What is the worst score obtained by the search?
-worstScore :: Search (Down a) b -> (b -> a) -> a
-worstScore m p = p (pessimum m p)
 
 union :: Ord a => Search a b -> Search a b -> Search a b
 union = (<!>)
@@ -168,5 +179,8 @@ pair = on (<!>) pure
 fromList :: Ord a => [b] -> Search a b
 fromList = foldr1 (<!>) . map return
 
+-- | 'Search' is more powerful than 'Cont'.
+--
+-- This provides a canonical monad homomorphism into 'Cont'.
 cps :: Search a b -> Cont a b
-cps m = cont $ \p -> p (optimum m p)
+cps = cont . optimalScore
