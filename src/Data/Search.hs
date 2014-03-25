@@ -6,10 +6,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Data.Search
   ( Search(..)
+  , pessimum
   , union
   , pair
   , fromList
-  , search
+  , best
+  , worst
   , score
   -- * Boolean-valued search
   , every
@@ -24,13 +26,21 @@ import Data.Functor.Alt
 import Data.Functor.Bind
 import Data.Int
 import Data.Monoid
+import Data.Ord
 import Data.Profunctor
 import Data.Proxy
 import Data.Tagged
 import Data.Word
 import GHC.Generics
 
+-- | Given a test that is required to execute in finite time for _all_ inputs, even infinite ones,
+-- 'Search' should productively yield an answer.
+--
+-- @'Search Bool'@ can be used to answer predicate searches.
 newtype Search a b = Search { optimum :: (b -> a) -> b }
+
+pessimum :: Search (Down a) b -> (b -> a) -> b
+pessimum = optimum . lmap Down
 
 instance Profunctor Search where
   dimap f g (Search k) = Search $ \ba -> g (k (f.ba.g))
@@ -121,18 +131,22 @@ instance (Ord x, Ord a, Hilbert x b) => Hilbert x (Search a b) where
 --
 -- >>> search (>4) :: Int8
 -- 5
-search :: Hilbert a b => (b -> a) -> b
-search = optimum epsilon
+best :: Hilbert a b => (b -> a) -> b
+best = optimum epsilon
 
--- |
+worst :: Hilbert (Down a) b => (b -> a) -> b
+worst = pessimum epsilon
+
+-- | does there exist an element satisfying the predicate?
 --
--- >>> exists (>(127 :: Int8))
+-- >>> exists (>(maxBound::Int8))
 -- False
-exists :: Hilbert a b => (b -> a) -> a
-exists p = p (search p)
+--
+exists :: Hilbert Bool b => (b -> Bool) -> Bool
+exists p = p (best p)
 
 every :: Hilbert Bool b => (b -> Bool) -> Bool
-every p = not.p $ search $ not.p
+every p = not.p $ best $ not.p
 
 score :: Search a b -> (b -> a) -> a
 score m p = p (optimum m p)
