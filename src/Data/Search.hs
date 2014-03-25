@@ -121,10 +121,10 @@ instance (Hilbert x a, Hilbert x b, Hilbert x c) => Hilbert x (a, b, c)
 instance (Hilbert x a, Hilbert x b, Hilbert x c, Hilbert x d) => Hilbert x (a, b, c, d)
 instance (Hilbert x a, Hilbert x b, Hilbert x c, Hilbert x d, Hilbert x e) => Hilbert x (a, b, c, d, e)
 instance Ord x => Hilbert x Bool
-instance Ord x => Hilbert x Any
-instance Ord x => Hilbert x All
-instance Hilbert x a => Hilbert x (Product a)
-instance Hilbert x a => Hilbert x (Sum a)
+instance Ord x => Hilbert x Any where epsilon = Any <$> epsilon
+instance Ord x => Hilbert x All where epsilon = All <$> epsilon
+instance Hilbert x a => Hilbert x (Product a) where epsilon = Product <$> epsilon
+instance Hilbert x a => Hilbert x (Sum a) where epsilon = Sum <$> epsilon
 instance Ord x => Hilbert x Ordering
 instance Ord x => Hilbert x Char where epsilon = fromList [minBound .. maxBound]
 instance Ord x => Hilbert x Int8 where epsilon = fromList [minBound .. maxBound]
@@ -132,7 +132,10 @@ instance Ord x => Hilbert x Int16 where epsilon = fromList [minBound .. maxBound
 instance Ord x => Hilbert x Word8 where epsilon = fromList [minBound .. maxBound]
 instance Ord x => Hilbert x Word16 where epsilon = fromList [minBound .. maxBound]
 instance (Ord x, Hilbert x a) => Hilbert x [a]
+instance (Ord x, Hilbert x a) => Hilbert x (ZipList a) where epsilon = ZipList <$> epsilon
 instance (Ord x, Hilbert x a) => Hilbert x (Maybe a)
+instance (Ord x, Hilbert x a) => Hilbert x (First a) where epsilon = First <$> epsilon
+instance (Ord x, Hilbert x a) => Hilbert x (Last a) where epsilon = Last <$> epsilon
 instance (Ord x, Hilbert x a, Hilbert x b) => Hilbert x (Either a b)
 instance (Ord x, Ord a, Hilbert x b) => Hilbert x (Search a b) where
   epsilon = fromList <$> epsilon
