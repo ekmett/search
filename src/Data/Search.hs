@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -32,6 +33,7 @@ import Data.Ord
 import Data.Profunctor
 import Data.Proxy
 import Data.Tagged
+import Data.Typeable
 import Data.Word
 import GHC.Generics
 
@@ -44,6 +46,7 @@ import GHC.Generics
 --
 -- @'Search' 'Bool'@ can be used for predicate searches.
 newtype Search a b = Search { optimum :: (b -> a) -> b }
+  deriving Typeable
 
 -- | Find the worst-scoring result of a search.
 pessimum :: Search (Down a) b -> (b -> a) -> b
