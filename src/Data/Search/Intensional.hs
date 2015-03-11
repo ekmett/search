@@ -156,7 +156,7 @@ pessimalScore m p = p (pessimum m p)
 
 -- | search for an optimal answer using Hilbert's epsilon
 --
--- >>> search (>4) :: Int8
+-- >>> best (>4) :: Int8
 -- 5
 best :: Hilbert a b => (b -> a) -> b
 best = optimum epsilon
