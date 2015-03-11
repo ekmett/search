@@ -43,6 +43,7 @@ install:
 
 script:
   - $CABAL build
+  - $CABAL install
   - $CABAL test --show-details=always
 
 notifications:
