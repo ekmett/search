@@ -39,11 +39,9 @@ before_install:
 
 install:
   - $CABAL install --dependencies-only --enable-tests
-  - $CABAL configure --enable-tests $MODE
+  - $CABAL install --enable-tests
 
 script:
-  - $CABAL build
-  - $CABAL install
   - $CABAL test --show-details=always
 
 notifications:
