@@ -1,12 +1,15 @@
+{-# LANGUAGE CPP #-}
 module Main where
 
 import Build_doctests (deps)
-import Control.Applicative
 import Control.Monad
 import Data.List
 import System.Directory
 import System.FilePath
 import Test.DocTest
+#if __GLASGOW_HASKELL__ < 710
+import Control.Applicative
+#endif
 
 main :: IO ()
 main = getSources >>= \sources -> doctest $

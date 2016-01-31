@@ -28,7 +28,7 @@ import Data.Function (on)
 import Data.Functor.Alt
 import Data.Functor.Bind
 import Data.Int
-import Data.Monoid
+import Data.Monoid (Any(..), All(..), Product(..), Sum(..), First(..), Last(..))
 import Data.Ord
 import Data.Profunctor
 import Data.Proxy
