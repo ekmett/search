@@ -20,7 +20,6 @@ module Data.Search
   , best, worst
   , bestScore, worstScore
   -- * Boolean-valued search
-  , B(..)
   , every
   , exists
   ) where
