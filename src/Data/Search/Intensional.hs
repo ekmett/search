@@ -6,6 +6,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Data.Search.Intensional
   ( Search(..)
   , pessimumM
@@ -27,6 +28,7 @@ module Data.Search.Intensional
 import Control.Applicative
 import Control.Monad.Trans.Cont
 import Control.Monad (ap)
+import Data.Coerce
 import Data.Function (on)
 import Data.Functor.Alt
 import Data.Functor.Bind
@@ -36,6 +38,7 @@ import Data.Monoid (Any(..), All(..), Product(..), Sum(..), First(..), Last(..))
 import Data.Ord
 import Data.Profunctor
 import Data.Proxy
+import Data.Search.LazyBool
 import Data.Tagged
 import Data.Typeable
 import Data.Word
@@ -49,14 +52,14 @@ import GHC.Generics
 -- This rules out large score sets.
 --
 -- @'Search' 'Bool'@ can be used for predicate searches.
-newtype Search a b = Search { optimumM :: forall m. (Monad m, Applicative m) => (b -> m a) -> m b }
+newtype Search a b = Search { optimumM :: forall m. Monad m => (b -> m a) -> m b }
   deriving Typeable
 
 optimum :: Search a b -> (b -> a) -> b
 optimum (Search k) f = runIdentity $ k (Identity . f)
 
 -- | Find the worst-scoring result of a search with monadic effects.
-pessimumM :: (Monad m, Applicative m) => Search (Down a) b -> (b -> m a) -> m b
+pessimumM :: Monad m => Search (Down a) b -> (b -> m a) -> m b
 pessimumM = optimumM . lmap Down
 
 -- | Find the worst-scoring result of a search.
@@ -176,11 +179,11 @@ worstScore = pessimalScore epsilon
 -- >>> exists (>(maxBound::Int8))
 -- False
 --
-exists :: Hilbert Bool b => (b -> Bool) -> Bool
-exists = bestScore
+exists :: forall b. Hilbert B b => (b -> Bool) -> Bool
+exists = coerce (bestScore :: (b -> B) -> B)
 
-every :: Hilbert Bool b => (b -> Bool) -> Bool
-every p = not.p $ best $ not.p
+every :: forall b. Hilbert B b => (b -> Bool) -> Bool
+every p = not.p $ coerce (best :: (b -> B) -> b) $ not.p
 
 union :: Ord a => Search a b -> Search a b -> Search a b
 union = (<!>)

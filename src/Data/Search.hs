@@ -32,10 +32,11 @@ import Data.Function (on)
 import Data.Functor.Alt
 import Data.Functor.Bind
 import Data.Int
-import Data.Monoid (Monoid(..), Any(..), All(..), Product(..), Sum(..), First(..), Last(..))
+import Data.Monoid (Any(..), All(..), Product(..), Sum(..), First(..), Last(..))
 import Data.Ord
 import Data.Profunctor
 import Data.Proxy
+import Data.Search.LazyBool
 import Data.Tagged
 import Data.Typeable
 import Data.Word
@@ -183,23 +184,6 @@ worstScore = pessimalScore epsilon
 
 union :: Ord a => Search a b -> Search a b -> Search a b
 union = (<!>)
-
--- | Bool with a lazier Ord as suggested <https://www.reddit.com/r/haskell/comments/7arjd1/more_defined_boolean_comparisons/ here>
-newtype B = B Bool deriving (Eq,Show,Read)
-
-instance Ord B where
-  B False <= _ = True
-  B _ <= B y = y
-  B False < B y = y
-  B _ < _ = False
-  B False >= B b = not b
-  B _ >= _ = True
-  B False > _ = False
-  B _ > B b = not b
-  min (B False) _ = B False
-  min _ b = b
-  max (B False) b = b
-  max _ _ = B True
 
 -- | does there exist an element satisfying the predicate?
 --

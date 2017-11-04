@@ -31,11 +31,12 @@ library
     profunctors          >= 4     && < 6,
     semigroupoids        >= 4     && < 6,
     tagged               >= 0.7   && < 1,
-    transformers         >= 0.3   && < 0.5
+    transformers         >= 0.3   && < 0.6
 
   exposed-modules:
     Data.Search
     Data.Search.Intensional
+    Data.Search.LazyBool
 
   ghc-options: -Wall -fwarn-tabs -O2
   hs-source-dirs: src
