@@ -51,7 +51,7 @@ library
 test-suite doctests
   type:           exitcode-stdio-1.0
   main-is:        doctests.hs
-  ghc-options:    -Wall -Werror -threaded
+  ghc-options:    -Wall -threaded
   hs-source-dirs: tests
   build-depends:
     base,
