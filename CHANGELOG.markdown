@@ -1,3 +1,7 @@
+next
+----
+* Don't re-export B(..) from Data.Search
+
 0.2
 ---
 * Use lazier boolean comparisons
