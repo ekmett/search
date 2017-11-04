@@ -1,6 +1,7 @@
 0.2
 ---
 * Use lazier boolean comparisons
+* `transformers` 0.5 support
 
 0.1.0.1
 -------
