@@ -4,7 +4,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Data.Search
   ( Search(..)
   , pessimum
@@ -18,17 +20,19 @@ module Data.Search
   , best, worst
   , bestScore, worstScore
   -- * Boolean-valued search
+  , B(..)
   , every
   , exists
   ) where
 
 import Control.Applicative
 import Control.Monad.Trans.Cont
+import Data.Coerce
 import Data.Function (on)
 import Data.Functor.Alt
 import Data.Functor.Bind
 import Data.Int
-import Data.Monoid
+import Data.Monoid (Monoid(..), Any(..), All(..), Product(..), Sum(..), First(..), Last(..))
 import Data.Ord
 import Data.Profunctor
 import Data.Proxy
@@ -159,26 +163,6 @@ best = optimum epsilon
 worst :: Hilbert (Down a) b => (b -> a) -> b
 worst = pessimum epsilon
 
-bestScore :: Hilbert a b => (b -> a) -> a
-bestScore = optimalScore epsilon
-
-worstScore :: Hilbert (Down a) b => (b -> a) -> a
-worstScore = pessimalScore epsilon
-
--- | does there exist an element satisfying the predicate?
---
--- >>> exists (>(maxBound::Int8))
--- False
---
-exists :: Hilbert Bool b => (b -> Bool) -> Bool
-exists = bestScore
-
-every :: Hilbert Bool b => (b -> Bool) -> Bool
-every p = not.p $ best $ not.p
-
-union :: Ord a => Search a b -> Search a b -> Search a b
-union = (<!>)
-
 pair :: Ord a => b -> b -> Search a b
 pair = on (<!>) pure
 
@@ -190,3 +174,40 @@ fromList = foldr1 (<!>) . map return
 -- This provides a canonical monad homomorphism into 'Cont'.
 cps :: Search a b -> Cont a b
 cps = cont . optimalScore
+
+bestScore :: Hilbert a b => (b -> a) -> a
+bestScore = optimalScore epsilon
+
+worstScore :: Hilbert (Down a) b => (b -> a) -> a
+worstScore = pessimalScore epsilon
+
+union :: Ord a => Search a b -> Search a b -> Search a b
+union = (<!>)
+
+-- | Bool with a lazier Ord as suggested <https://www.reddit.com/r/haskell/comments/7arjd1/more_defined_boolean_comparisons/ here>
+newtype B = B Bool deriving (Eq,Show,Read)
+
+instance Ord B where
+  B False <= _ = True
+  B _ <= B y = y
+  B False < B y = y
+  B _ < _ = False
+  B False >= B b = not b
+  B _ >= _ = True
+  B False > _ = False
+  B _ > B b = not b
+  min (B False) _ = B False
+  min _ b = b
+  max (B False) b = b
+  max _ _ = B True
+
+-- | does there exist an element satisfying the predicate?
+--
+-- >>> exists (>(maxBound::Int8))
+-- False
+--
+exists :: forall b. Hilbert B b => (b -> Bool) -> Bool
+exists = coerce (bestScore :: (b -> B) -> B)
+
+every :: forall b. Hilbert B b => (b -> Bool) -> Bool
+every p = not.p $ coerce (best :: (b -> B) -> b) $ not.p
